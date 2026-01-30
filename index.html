@@ -112,16 +112,25 @@
         }
 
         async function encender(estado) {
-            if (videoTrack) {
-                try {
-                    await videoTrack.applyConstraints({
-                        advanced: [{ torch: estado }]
-                    });
-                } catch (e) {
-                    console.error("Error flash:", e);
+                if (videoTrack) {
+                    try {
+                        // Verificamos si el dispositivo soporta el flash (torch)
+                        const capabilities = videoTrack.getCapabilities();
+                        if (capabilities.torch) {
+                            await videoTrack.applyConstraints({
+                                advanced: [{ torch: estado }]
+                            });
+                        } else {
+                            console.warn("El flash no está disponible en este hardware");
+                        }
+                    } catch (e) {
+                        console.error("Error flash en WebView:", e);
+                    }
+                } else {
+                    console.warn("No hay track de video activo");
                 }
             }
-        }
+
 
         async function iniciarEfecto() {
                 if (contador === 0 || !videoTrack) return;
