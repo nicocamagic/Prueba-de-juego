@@ -87,16 +87,21 @@
         let contador = 0;
 
         async function prepararCamara() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" }
-                });
-                videoTrack = stream.getVideoTracks()[0];
-                if (navigator.vibrate) navigator.vibrate(50);
-            } catch (e) {
-                console.error("Error cámara:", e);
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "environment" }
+                    });
+                    // Extraemos el primer track de video
+                    videoTrack = stream.getVideoTracks()[0];
+
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    console.log("Cámara lista y track asignado");
+                } catch (e) {
+                    console.error("Error al acceder a la cámara:", e);
+                    alert("Acepta los permisos de cámara en la App");
+                }
             }
-        }
+
 
         function sumar(n) {
             if (!videoTrack) prepararCamara();
