@@ -15,146 +15,150 @@
             height: 100vh;
             width: 100vw;
             display: flex;
+            /* Alinea las zonas en columnas */
             overflow: hidden;
             touch-action: none;
-            /* Evita zoom y scroll accidental */
         }
 
-        /* Zonas táctiles invisibles */
+        /* Cada zona ocupa un tercio de la pantalla */
         .touch-zone {
             height: 100%;
             z-index: 10;
         }
 
         #decenas {
-            width: 40%;
+            width: 35%;
+            /* background: rgba(255,0,0,0.1); */
+            /* Solo para pruebas: quita el comentario para ver la zona */
         }
 
         #unidades {
-            width: 40%;
+            width: 35%;
+            /* background: rgba(0,0,255,0.1); */
+            /* Solo para pruebas */
         }
 
-        #ejecutar { 
-            position: absolute;
-            left: 30%;
-            width: 40%;
-            height: 50%;
-            top: 25%;
+        #ejecutar {
+            width: 30%;
+            background-color: #0d0d0d;
+            border-left: 1px solid #1a1a1a;
+            border-right: 1px solid #1a1a1a;
+            transition: opacity 0.5s ease;
             z-index: 20;
-            background-color: #0d0d0d; 
-            border: 1px solid #1a1a1a; 
-            border-radius: 15px;
-            transition: opacity 0.5s ease; /* Efecto de desvanecido */
         }
 
         .hidden {
             opacity: 0 !important;
-            pointer-events: none; /* Para que no puedas tocarlo por error otra vez */
+            pointer-events: none;
         }
-
-
 
         #reset {
             position: absolute;
             top: 0;
             right: 0;
-            width: 60px;
-            height: 60px;
-            z-index: 30;
+            width: 80px;
+            height: 80px;
+            z-index: 40;
         }
 
-        /* Indicador sutil solo para ti durante el desarrollo */
         #debug {
             position: absolute;
             bottom: 10px;
             left: 10px;
             color: #111;
-            /* Casi invisible */
             font-size: 10px;
             pointer-events: none;
+            z-index: 50;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="decenas" onclick="sumar(10)"></div>
-    <div id="ejecutar" onclick="iniciarEfecto()"></div>
-    <div id="unidades" onclick="sumar(1)"></div>
+    <div id="decenas" class="touch-zone" onclick="sumar(10)"></div>
+    <div id="ejecutar" class="touch-zone" onclick="iniciarEfecto()"></div>
+    <div id="unidades" class="touch-zone" onclick="sumar(1)"></div>
     <div id="reset" onclick="limpiar()"></div>
 
     <div id="debug">0</div>
 
     <script>
         let videoTrack = null;
-            let contador = 0;
+        let contador = 0;
 
-            // FUNCIÓN CLAVE: Esta debe ejecutarse con tu PRIMER toque en la pantalla
-            async function prepararCamara() {
+        async function prepararCamara() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                videoTrack = stream.getVideoTracks()[0];
+                if (navigator.vibrate) navigator.vibrate(50);
+            } catch (e) {
+                console.error("Error cámara:", e);
+            }
+        }
+
+        function sumar(n) {
+            if (!videoTrack) prepararCamara();
+            contador += n;
+            document.getElementById('debug').innerText = contador;
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function limpiar() {
+            contador = 0;
+            document.getElementById('debug').innerText = 0;
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        }
+
+        async function encender(estado) {
+            if (videoTrack) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: { exact: "environment" } // Obliga a usar la cámara trasera
-                        }
+                    await videoTrack.applyConstraints({
+                        advanced: [{ torch: estado }]
                     });
-                    videoTrack = stream.getVideoTracks()[0];
-                    console.log("Cámara lista para el truco");
-                    if (navigator.vibrate) navigator.vibrate(50); // Vibración sutil de confirmación
                 } catch (e) {
-                    // Si falla el 'exact', intentamos el modo normal
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    videoTrack = stream.getVideoTracks()[0];
+                    console.error("Error flash:", e);
                 }
             }
+        }
 
-            function sumar(n) {
-                if (!videoTrack) prepararCamara(); // Activa la cámara al primer toque
-                contador += n;
-                document.getElementById('debug').innerText = contador;
-            }
+        async function iniciarEfecto() {
+            if (contador === 0 || !videoTrack) return;
 
-            async function encender(estado) {
-                if (videoTrack) {
-                    try {
-                        await videoTrack.applyConstraints({
-                            advanced: [{ torch: estado }]
-                        });
-                    } catch (e) {
-                        console.error("Error flash:", e);
-                    }
-                }
-            }
+            const boton = document.getElementById('ejecutar');
+            boton.classList.add('hidden');
 
-            async function iniciarEfecto() {
-                if (contador === 0 || !videoTrack) return;
+            const vueltas = contador;
+            contador = 0;
+            document.getElementById('debug').innerText = "";
 
-                document.getElementById('ejecutar').classList.add('hidden');
-                const vueltas = contador;
-                contador = 0;
+            for (let i = 0; i < vueltas; i++) {
+                await encender(true);
+                await new Promise(r => setTimeout(r, 400));
+                await encender(false);
 
-                for (let i = 0; i < vueltas; i++) {
-                    await encender(true);
-                    await new Promise(r => setTimeout(r, 400));
-                    await encender(false);
+                // Pausa entre parpadeos
+                if (i === vueltas - 1) {
+                    await new Promise(r => setTimeout(r, 1000));
+                } else {
                     await new Promise(r => setTimeout(r, 700));
                 }
-
-                setTimeout(() => {
-                    document.getElementById('ejecutar').classList.remove('hidden');
-                }, 2000);
             }
 
-    </script>
-    <script>
+            setTimeout(() => {
+                boton.classList.remove('hidden');
+                document.getElementById('debug').innerText = "0";
+            }, 2000);
+        }
+
+        // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('App lista para usar offline', reg))
-                    .catch(err => console.log('Fallo al registrar worker', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => { });
             });
         }
     </script>
-
 </body>
 
-</html>
+</html> 
