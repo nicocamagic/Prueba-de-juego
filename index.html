@@ -124,33 +124,31 @@
         }
 
         async function iniciarEfecto() {
-            if (contador === 0 || !videoTrack) return;
+                if (contador === 0 || !videoTrack) return;
 
-            const boton = document.getElementById('ejecutar');
-            boton.classList.add('hidden');
+                const boton = document.getElementById('ejecutar');
+                boton.classList.add('hidden');
 
-            const vueltas = contador;
-            contador = 0;
-            document.getElementById('debug').innerText = "";
+                const vueltas = contador;
+                contador = 0;
+                document.getElementById('debug').innerText = "";
 
-            for (let i = 0; i < vueltas; i++) {
-                await encender(true);
-                await new Promise(r => setTimeout(r, 400));
-                await encender(false);
+                // RETARDO MÁGICO: 3 segundos de suspenso antes de empezar
+                await new Promise(r => setTimeout(r, 3000));
 
-                // Pausa entre parpadeos
-                if (i === vueltas - 1) {
-                    await new Promise(r => setTimeout(r, 1000));
-                } else {
+                for (let i = 0; i < vueltas; i++) {
+                    await encender(true);
+                    await new Promise(r => setTimeout(r, 400));
+                    await encender(false);
                     await new Promise(r => setTimeout(r, 700));
                 }
+
+                setTimeout(() => {
+                    boton.classList.remove('hidden');
+                    document.getElementById('debug').innerText = "0";
+                }, 2000);
             }
 
-            setTimeout(() => {
-                boton.classList.remove('hidden');
-                document.getElementById('debug').innerText = "0";
-            }, 2000);
-        }
 
         // Service Worker
         if ('serviceWorker' in navigator) {
