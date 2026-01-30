@@ -84,87 +84,64 @@
     <div id="debug">0</div>
 
     <script>
-        let contador = 0;
         let videoTrack = null;
+            let contador = 0;
 
-        // Pedir permiso de cámara al cargar o tocar por primera vez
-        async function activarCamara() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                });
-                videoTrack = stream.getVideoTracks()[0];
-            } catch (e) {
-                console.error("Error acceso cámara:", e);
-            }
-        }
-
-        function sumar(n) {
-            if (!videoTrack) activarCamara();
-            contador += n;
-            document.getElementById('debug').innerText = contador;
-            if (navigator.vibrate) navigator.vibrate(40);
-        }
-
-        function limpiar() {
-            contador = 0;
-            document.getElementById('debug').innerText = contador;
-            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-        }
-
-                async function iniciarEfecto() {
-                    if (contador === 0) return;
-
-                    // 1. Ocultar el botón gris inmediatamente
-                    const boton = document.getElementById('ejecutar');
-                    boton.classList.add('hidden');
-
-                    const vueltas = contador;
-                    contador = 0;
-                    document.getElementById('debug').innerText = ""; // Limpiamos el número para que no se vea nada
-
-                    // Pequeña pausa antes de empezar para darle misterio
-                    await sleep(800);
-
-                    for (let i = 0; i < vueltas; i++) {
-                        await encender(true);
-                        await sleep(400);
-                        await encender(false);
-
-                        if (i === vueltas - 1) {
-                            await sleep(1000);
-                        } else {
-                            await sleep(700);
+            // FUNCIÓN CLAVE: Esta debe ejecutarse con tu PRIMER toque en la pantalla
+            async function prepararCamara() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: { exact: "environment" } // Obliga a usar la cámara trasera
                         }
-                    }
-
-                    // Al terminar, el botón vuelve a aparecer para el siguiente truco
-                    setTimeout(() => {
-                        boton.classList.remove('hidden');
-                    }, 2000);
+                    });
+                    videoTrack = stream.getVideoTracks()[0];
+                    console.log("Cámara lista para el truco");
+                    if (navigator.vibrate) navigator.vibrate(50); // Vibración sutil de confirmación
+                } catch (e) {
+                    // Si falla el 'exact', intentamos el modo normal
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    videoTrack = stream.getVideoTracks()[0];
                 }
+            }
 
+            function sumar(n) {
+                if (!videoTrack) prepararCamara(); // Activa la cámara al primer toque
+                contador += n;
+                document.getElementById('debug').innerText = contador;
+            }
 
-        async function encender(estado) {
-                // La pantalla se queda negra
-                if (videoTrack && videoTrack[0]) {
+            async function encender(estado) {
+                if (videoTrack) {
                     try {
-                        await videoTrack[0].applyConstraints({
+                        await videoTrack.applyConstraints({
                             advanced: [{ torch: estado }]
                         });
                     } catch (e) {
-                        console.error("El dispositivo no soporta 'torch' en el navegador:", e);
+                        console.error("Error flash:", e);
                     }
                 }
             }
 
+            async function iniciarEfecto() {
+                if (contador === 0 || !videoTrack) return;
 
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+                document.getElementById('ejecutar').classList.add('hidden');
+                const vueltas = contador;
+                contador = 0;
 
-        // Activar cámara al primer toque en cualquier parte
-        document.body.addEventListener('touchstart', activarCamara, { once: true });
+                for (let i = 0; i < vueltas; i++) {
+                    await encender(true);
+                    await new Promise(r => setTimeout(r, 400));
+                    await encender(false);
+                    await new Promise(r => setTimeout(r, 700));
+                }
+
+                setTimeout(() => {
+                    document.getElementById('ejecutar').classList.remove('hidden');
+                }, 2000);
+            }
+
     </script>
 </body>
 
