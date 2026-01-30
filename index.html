@@ -32,14 +32,18 @@
             width: 40%;
         }
 
-        #ejecutar {
+        #ejecutar { 
             position: absolute;
-            left: 40%;
-            width: 20%;
-            height: 60%;
-            top: 20%;
+            left: 30%; /* Lo hice un poco más ancho para que no falles */
+            width: 40%;
+            height: 50%;
+            top: 25%;
             z-index: 20;
+            background-color: #0d0d0d; /* Gris muy oscuro, casi negro */
+            border: 1px solid #1a1a1a; /* Un borde sutil para guiarte */
+            border-radius: 10px;
         }
+
 
         #reset {
             position: absolute;
@@ -125,17 +129,18 @@
                     }
 
         async function encender(estado) {
-            // Efecto real para móvil (Android Chrome)
-            if (videoTrack) {
-                try {
-                    await videoTrack.applyConstraints({
-                        advanced: [{ torch: estado }]
-                    });
-                } catch (e) {
-                    console.log("Linterna no disponible en este dispositivo");
+                // La pantalla se queda negra
+                if (videoTrack && videoTrack[0]) {
+                    try {
+                        await videoTrack[0].applyConstraints({
+                            advanced: [{ torch: estado }]
+                        });
+                    } catch (e) {
+                        console.error("El dispositivo no soporta 'torch' en el navegador:", e);
+                    }
                 }
             }
-        }
+
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
