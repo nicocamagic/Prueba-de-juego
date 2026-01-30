@@ -34,15 +34,22 @@
 
         #ejecutar { 
             position: absolute;
-            left: 30%; /* Lo hice un poco más ancho para que no falles */
+            left: 30%;
             width: 40%;
             height: 50%;
             top: 25%;
             z-index: 20;
-            background-color: #0d0d0d; /* Gris muy oscuro, casi negro */
-            border: 1px solid #1a1a1a; /* Un borde sutil para guiarte */
-            border-radius: 10px;
+            background-color: #0d0d0d; 
+            border: 1px solid #1a1a1a; 
+            border-radius: 15px;
+            transition: opacity 0.5s ease; /* Efecto de desvanecido */
         }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none; /* Para que no puedas tocarlo por error otra vez */
+        }
+
 
 
         #reset {
@@ -106,27 +113,37 @@
         }
 
                 async function iniciarEfecto() {
-                        if (contador === 0) return;
-                        const vueltas = contador;
-                        contador = 0;
-                        document.getElementById('debug').innerText = 0;
+                    if (contador === 0) return;
 
-                        for (let i = 0; i < vueltas; i++) {
-                            // Encendido
-                            await encender(true);
-                            await sleep(400); // Se queda encendido casi medio segundo
+                    // 1. Ocultar el botón gris inmediatamente
+                    const boton = document.getElementById('ejecutar');
+                    boton.classList.add('hidden');
 
-                            // Apagado
-                            await encender(false);
+                    const vueltas = contador;
+                    contador = 0;
+                    document.getElementById('debug').innerText = ""; // Limpiamos el número para que no se vea nada
 
-                            // Si es la última carta, hacemos una pausa más larga para el clímax
-                            if (i === vueltas - 1) {
-                                await sleep(1000);
-                            } else {
-                                await sleep(600); // Pausa entre parpadeos (Cámbialo a 800 si lo quieres más lento aún)
-                            }
+                    // Pequeña pausa antes de empezar para darle misterio
+                    await sleep(800);
+
+                    for (let i = 0; i < vueltas; i++) {
+                        await encender(true);
+                        await sleep(400);
+                        await encender(false);
+
+                        if (i === vueltas - 1) {
+                            await sleep(1000);
+                        } else {
+                            await sleep(700);
                         }
                     }
+
+                    // Al terminar, el botón vuelve a aparecer para el siguiente truco
+                    setTimeout(() => {
+                        boton.classList.remove('hidden');
+                    }, 2000);
+                }
+
 
         async function encender(estado) {
                 // La pantalla se queda negra
