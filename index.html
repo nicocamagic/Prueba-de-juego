@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Viewport fit cover es vital para que ocupe toda la pantalla en Android -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>App de Magia</title>
     <link rel="manifest" href="manifest.json">
 
@@ -12,15 +14,15 @@
             background-color: black;
             margin: 0;
             padding: 0;
-            height: 100vh;
+            /* dvh asegura que ignore las barras del sistema en móviles */
+            height: 100dvh;
             width: 100vw;
             display: flex;
-            /* Alinea las zonas en columnas */
+            flex-direction: row;
             overflow: hidden;
             touch-action: none;
         }
 
-        /* Cada zona ocupa un tercio de la pantalla */
         .touch-zone {
             height: 100%;
             z-index: 10;
@@ -28,21 +30,18 @@
 
         #decenas {
             width: 35%;
-            /* background: rgba(255,0,0,0.1); */
-            /* Solo para pruebas: quita el comentario para ver la zona */
         }
 
         #unidades {
             width: 35%;
-            /* background: rgba(0,0,255,0.1); */
-            /* Solo para pruebas */
         }
 
         #ejecutar {
             width: 30%;
-            background-color: #0d0d0d;
-            border-left: 1px solid #1a1a1a;
-            border-right: 1px solid #1a1a1a;
+            /* Gris ligeramente más claro para ser visible en pantallas OLED */
+            background-color: #151515;
+            border-left: 1px solid #1f1f1f;
+            border-right: 1px solid #1f1f1f;
             transition: opacity 0.5s ease;
             z-index: 20;
         }
@@ -56,17 +55,20 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            /* Un poco más grande para facilitar el toque invisible */
+            height: 100px;
             z-index: 40;
         }
 
         #debug {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 15px;
+            left: 15px;
             color: #111;
-            font-size: 10px;
+            /* Color casi negro para que solo tú lo veas de cerca */
+            font-family: sans-serif;
+            font-size: 12px;
             pointer-events: none;
             z-index: 50;
         }
@@ -87,90 +89,84 @@
         let contador = 0;
 
         async function prepararCamara() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: "environment" }
-                    });
-                    // Extraemos el primer track de video
-                    videoTrack = stream.getVideoTracks()[0];
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                videoTrack = stream.getVideoTracks()[0];
 
-                    if (navigator.vibrate) navigator.vibrate(50);
-                    console.log("Cámara lista y track asignado");
-                } catch (e) {
-                    console.error("Error al acceder a la cámara:", e);
-                    alert("Acepta los permisos de cámara en la App");
-                }
+                if (navigator.vibrate) navigator.vibrate(40);
+                console.log("Hardware de cámara vinculado correctamente.");
+            } catch (e) {
+                console.error("Error al acceder a la cámara:", e);
+                // Usamos el [Web API de Vibración](https://developer.mozilla.org) para avisar del error de forma táctil
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             }
-
+        }
 
         function sumar(n) {
             if (!videoTrack) prepararCamara();
             contador += n;
             document.getElementById('debug').innerText = contador;
-            if (navigator.vibrate) navigator.vibrate(30);
+            if (navigator.vibrate) navigator.vibrate(25);
         }
 
         function limpiar() {
             contador = 0;
             document.getElementById('debug').innerText = 0;
-            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+            if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
         }
 
         async function encender(estado) {
-                if (videoTrack) {
-                    try {
-                        // Verificamos si el dispositivo soporta el flash (torch)
-                        const capabilities = videoTrack.getCapabilities();
-                        if (capabilities.torch) {
-                            await videoTrack.applyConstraints({
-                                advanced: [{ torch: estado }]
-                            });
-                        } else {
-                            console.warn("El flash no está disponible en este hardware");
-                        }
-                    } catch (e) {
-                        console.error("Error flash en WebView:", e);
+            if (videoTrack) {
+                try {
+                    const capabilities = videoTrack.getCapabilities();
+                    if (capabilities.torch) {
+                        await videoTrack.applyConstraints({
+                            advanced: [{ torch: estado }]
+                        });
                     }
-                } else {
-                    console.warn("No hay track de video activo");
+                } catch (e) {
+                    console.error("Error flash:", e);
                 }
             }
-
+        }
 
         async function iniciarEfecto() {
-                if (contador === 0 || !videoTrack) return;
+            // El contador 0 o falta de track cancela la ejecución
+            if (contador === 0 || !videoTrack) return;
 
-                const boton = document.getElementById('ejecutar');
-                boton.classList.add('hidden');
+            const boton = document.getElementById('ejecutar');
+            const vueltas = contador;
 
-                const vueltas = contador;
-                contador = 0;
-                document.getElementById('debug').innerText = "";
+            boton.classList.add('hidden');
+            contador = 0;
+            document.getElementById('debug').innerText = "";
 
-                // RETARDO MÁGICO: 3 segundos de suspenso antes de empezar
-                await new Promise(r => setTimeout(r, 3000));
+            // Retardo de 3 segundos para alejar el móvil o posicionarte
+            await new Promise(r => setTimeout(r, 3000));
 
-                for (let i = 0; i < vueltas; i++) {
-                    await encender(true);
-                    await new Promise(r => setTimeout(r, 400));
-                    await encender(false);
-                    await new Promise(r => setTimeout(r, 700));
-                }
-
-                setTimeout(() => {
-                    boton.classList.remove('hidden');
-                    document.getElementById('debug').innerText = "0";
-                }, 2000);
+            for (let i = 0; i < vueltas; i++) {
+                await encender(true);
+                await new Promise(r => setTimeout(r, 350));
+                await encender(false);
+                await new Promise(r => setTimeout(r, 650));
             }
 
+            // Restaurar interfaz
+            setTimeout(() => {
+                boton.classList.remove('hidden');
+                document.getElementById('debug').innerText = "0";
+                if (navigator.vibrate) navigator.vibrate(60);
+            }, 1000);
+        }
 
-        // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => { });
+                navigator.serviceWorker.register('./sw.js').catch(() => { });
             });
         }
     </script>
 </body>
 
-</html> 
+</html>
