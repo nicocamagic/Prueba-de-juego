@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App de Magia</title>
+    <style>
+        body {
+            background-color: black;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            overflow: hidden;
+            touch-action: none;
+            /* Evita zoom y scroll accidental */
+        }
+
+        /* Zonas táctiles invisibles */
+        .touch-zone {
+            height: 100%;
+            z-index: 10;
+        }
+
+        #decenas {
+            width: 40%;
+        }
+
+        #unidades {
+            width: 40%;
+        }
+
+        #ejecutar {
+            position: absolute;
+            left: 40%;
+            width: 20%;
+            height: 60%;
+            top: 20%;
+            z-index: 20;
+        }
+
+        #reset {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            z-index: 30;
+        }
+
+        /* Indicador sutil solo para ti durante el desarrollo */
+        #debug {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #111;
+            /* Casi invisible */
+            font-size: 10px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="decenas" onclick="sumar(10)"></div>
+    <div id="ejecutar" onclick="iniciarEfecto()"></div>
+    <div id="unidades" onclick="sumar(1)"></div>
+    <div id="reset" onclick="limpiar()"></div>
+
+    <div id="debug">0</div>
+
+    <script>
+        let contador = 0;
+        let videoTrack = null;
+
+        // Pedir permiso de cámara al cargar o tocar por primera vez
+        async function activarCamara() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                videoTrack = stream.getVideoTracks()[0];
+            } catch (e) {
+                console.error("Error acceso cámara:", e);
+            }
+        }
+
+        function sumar(n) {
+            if (!videoTrack) activarCamara();
+            contador += n;
+            document.getElementById('debug').innerText = contador;
+            if (navigator.vibrate) navigator.vibrate(40);
+        }
+
+        function limpiar() {
+            contador = 0;
+            document.getElementById('debug').innerText = contador;
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        }
+
+                async function iniciarEfecto() {
+                        if (contador === 0) return;
+                        const vueltas = contador;
+                        contador = 0;
+                        document.getElementById('debug').innerText = 0;
+
+                        for (let i = 0; i < vueltas; i++) {
+                            // Encendido
+                            await encender(true);
+                            await sleep(400); // Se queda encendido casi medio segundo
+
+                            // Apagado
+                            await encender(false);
+
+                            // Si es la última carta, hacemos una pausa más larga para el clímax
+                            if (i === vueltas - 1) {
+                                await sleep(1000);
+                            } else {
+                                await sleep(600); // Pausa entre parpadeos (Cámbialo a 800 si lo quieres más lento aún)
+                            }
+                        }
+                    }
+
+        async function encender(estado) {
+            // Efecto visual para PC
+            document.body.style.backgroundColor = estado ? "white" : "black";
+
+            // Efecto real para móvil (Android Chrome)
+            if (videoTrack) {
+                try {
+                    await videoTrack.applyConstraints({
+                        advanced: [{ torch: estado }]
+                    });
+                } catch (e) {
+                    console.log("Linterna no disponible en este dispositivo");
+                }
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Activar cámara al primer toque en cualquier parte
+        document.body.addEventListener('touchstart', activarCamara, { once: true });
+    </script>
+</body>
+
+</html>
