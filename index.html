@@ -125,9 +125,6 @@
                     }
 
         async function encender(estado) {
-            // Efecto visual para PC
-            document.body.style.backgroundColor = estado ? "white" : "black";
-
             // Efecto real para móvil (Android Chrome)
             if (videoTrack) {
                 try {
