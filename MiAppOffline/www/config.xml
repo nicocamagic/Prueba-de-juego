@@ -1,0 +1,16 @@
+<widget id="com.tuempresa.miapp"
+        version="1.0.0"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
+  <name>Mi App Offline</name>
+
+  <content src="index.html" />
+
+  <access origin="*" />
+  <allow-navigation href="*" />
+
+  <platform name="android">
+    <preference name="android-minSdkVersion" value="22" />
+  </platform>
+</widget>
