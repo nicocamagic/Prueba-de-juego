@@ -1,16 +1,30 @@
-<widget id="com.tuempresa.miapp"
-        version="1.0.0"
-        xmlns="http://www.w3.org/ns/widgets"
-        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget
+  id="com.tuempresa.miapp"
+  version="1.0.0"
+  xmlns="http://www.w3.org/ns/widgets"
+  xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <name>Mi App Offline</name>
-
-  <content src="index.html" />
-
-  <access origin="*" />
-  <allow-navigation href="*" />
+  <name>Mi App</name>
 
   <platform name="android">
-    <preference name="android-minSdkVersion" value="22" />
+
+    <!-- Cámara + Flash -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Android antiguos -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+      android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+      android:maxSdkVersion="28" />
+
+    <!-- Indicar que usas flash -->
+    <uses-feature
+      android:name="android.hardware.camera.flash"
+      android:required="false" />
+
   </platform>
+
 </widget>
