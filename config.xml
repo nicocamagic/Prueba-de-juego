@@ -8,19 +8,10 @@
 
   <platform name="android">
 
-    <!-- Cámara + Flash -->
+    <!-- Cámara (incluye flash) -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Android 13+ -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    <!-- Android antiguos -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission
-      android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-      android:maxSdkVersion="28" />
-
-    <!-- Indicar que usas flash -->
+    <!-- Flash como hardware opcional -->
     <uses-feature
       android:name="android.hardware.camera.flash"
       android:required="false" />
