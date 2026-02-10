@@ -26,11 +26,9 @@
         height: 100%;
         z-index: 10;
       }
-
       #decenas {
         width: 35%;
       }
-
       #unidades {
         width: 35%;
       }
@@ -63,7 +61,6 @@
         bottom: 15px;
         left: 15px;
         color: #111;
-        font-family: sans-serif;
         font-size: 12px;
         pointer-events: none;
         z-index: 50;
@@ -81,6 +78,7 @@
 
     <script>
       let contador = 0;
+      let camActiva = false;
 
       function sumar(n) {
         contador += n;
@@ -94,31 +92,47 @@
         if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
       }
 
-      function encenderFlash(estado) {
-        if (window.plugins && window.plugins.flashlight) {
-          estado
-            ? window.plugins.flashlight.switchOn()
-            : window.plugins.flashlight.switchOff();
-        }
+      function flashOn() {
+        if (camActiva) return;
+
+        navigator.camera.getPicture(
+          () => {},
+          () => {},
+          {
+            quality: 1,
+            destinationType: Camera.DestinationType.NATIVE_URI,
+            cameraDirection: Camera.Direction.BACK,
+            flashMode: Camera.FlashMode.ON,
+            targetWidth: 1,
+            targetHeight: 1,
+            saveToPhotoAlbum: false,
+          },
+        );
+        camActiva = true;
+      }
+
+      function flashOff() {
+        if (!camActiva) return;
+        navigator.camera.cleanup();
+        camActiva = false;
       }
 
       async function iniciarEfecto() {
         if (contador === 0) return;
 
         const boton = document.getElementById("ejecutar");
-        const vueltas = contador;
-
         boton.classList.add("hidden");
+
+        const repeticiones = contador;
         contador = 0;
         document.getElementById("debug").innerText = "";
 
-        // Tiempo para preparar el truco
         await new Promise((r) => setTimeout(r, 3000));
 
-        for (let i = 0; i < vueltas; i++) {
-          encenderFlash(true);
+        for (let i = 0; i < repeticiones; i++) {
+          flashOn();
           await new Promise((r) => setTimeout(r, 350));
-          encenderFlash(false);
+          flashOff();
           await new Promise((r) => setTimeout(r, 650));
         }
 
@@ -130,7 +144,7 @@
       }
 
       document.addEventListener("deviceready", () => {
-        console.log("Cordova listo. Flash operativo.");
+        console.log("Cordova listo");
       });
     </script>
   </body>
